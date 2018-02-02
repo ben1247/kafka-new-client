@@ -3,6 +3,8 @@ package org.zy.kafka.newclient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -25,7 +27,7 @@ public class KafkaProducerDemo extends Thread{
         final Properties props = new Properties();
         props.put("bootstrap.servers",KafkaProperties.BOOTSTRAP_SERVERS);
         props.put("client.id","kafkaProducerDemo"); // 客户端id
-        props.put("key.serializer",KafkaProperties.KEY_SERIALIZER_INTEGER);
+        props.put("key.serializer",KafkaProperties.KEY_SERIALIZER_STRING);
         props.put("value.serializer",KafkaProperties.VALUE_SERIALIZER_STRING);
         // producer需要server接收到数据之后发出的确认接收的信号，此项配置就是指procuder需要多少个这样的确认信号。此配置实际上代表了数据备份的可用性。以下设置为常用选项：
         //（1）acks=0： 设置为0表示producer不需要等待任何确认收到的信息。副本将立即加到socket  buffer并认为已经发送。没有任何保障可以保证此种情况下server已经成功接收数据，同时重试配置不会发生作用（因为客户端不知道是否失败）回馈的offset会总是设置为-1；
@@ -41,18 +43,18 @@ public class KafkaProducerDemo extends Thread{
 
     @Override
     public void run() {
-        int messageNo = 31;
-        while (messageNo <= 40){
-            String messageStr = "Message_" + messageNo;
+        int messageNo = 1;
+        while (messageNo <= 10){
+            String messageStr = "Message_" + getNow();
             long startTime = System.currentTimeMillis();
 
             if (isAsync){ // 异步发送消息
                 // 第一个参数是ProducerRecord类型的对象，封装了目标Topic、消息的key、消息的value
                 // 第二个参数是一个CallBack对象，当生产者接收到kafka发来的ACK确认消息的时候，会调用此CallBack对象的onCompletion()方法，实现回调功能
-                producer.send(new ProducerRecord<>(this.topic,messageNo,messageStr),new KafkaProducerCallback(startTime,messageNo,messageStr));
+                producer.send(new ProducerRecord<>(this.topic,"" + messageNo,messageStr),new KafkaProducerCallback(startTime,messageNo,messageStr));
             }else{ // 同步发送消息
                 try {
-                    producer.send(new ProducerRecord<>(this.topic,messageNo,messageStr)).get();
+                    producer.send(new ProducerRecord<>(this.topic,"" + messageNo,messageStr)).get();
                     System.out.println("Sent message: (" + messageNo + ", " + messageStr + ")");
                 }catch (Exception e){
                     e.printStackTrace();
@@ -60,6 +62,11 @@ public class KafkaProducerDemo extends Thread{
             }
             messageNo++;
         }
+    }
+
+    private String getNow(){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        return sdf.format(new Date());
     }
 
     public KafkaProducer getProducer() {
