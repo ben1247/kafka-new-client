@@ -7,7 +7,7 @@ public class KafkaClientApp {
 
     public static void main(String[] args) throws InterruptedException {
 
-        KafkaProducerDemo producer = new KafkaProducerDemo(KafkaProperties.TOPIC,true);
+        KafkaProducerDemo producer = new KafkaProducerDemo(KafkaProperties.TOPIC,false);
         producer.start();
 
         KafkaConsumerDemo consumer1 = new KafkaConsumerDemo("t1",KafkaProperties.TOPIC,KafkaProperties.GROUP_ID_1);
